@@ -91,7 +91,7 @@ class App(ctk.CTk, Banco_de_dados, Backend):
         self.frame_01 = ctk.CTkFrame(self)
         self.frame_01.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.82)
 
-        self.button_01 = ctk.CTkButton(self.frame_barra, text='Calculadora Atmosfera',command=self.calculadora)
+        self.button_01 = ctk.CTkButton(self.frame_barra, text='Análise de desempenho',command=self.analise_desempenho)
         self.button_01.pack(side=ctk.LEFT, padx=5, pady=5)
 
         self.button_02 = ctk.CTkButton(self.frame_barra, text='Recursos da equipe')
@@ -106,9 +106,62 @@ class App(ctk.CTk, Banco_de_dados, Backend):
         self.texto_01_mainpage = ctk.CTkLabel(self.frame_01, text=f'Bem vindo, {self.usuario_atual}')
         self.texto_01_mainpage.pack(padx=10, pady=10)
 
-    def calculadora(self):
+    def analise_desempenho(self):
         self.limpar_tela()
+        self.frame_barra = ctk.CTkFrame(self)
+        self.frame_barra.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
 
+        self.frame_01 = ctk.CTkFrame(self)
+        self.frame_01.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.82)
+
+        self.button_01 = ctk.CTkButton(self.frame_barra, text='Calculadora da Atmofera', command=self.calculadora_atmosfera)
+        self.button_01.pack(side=ctk.LEFT, padx=5, pady=5)
+
+        self.button_02 = ctk.CTkButton(self.frame_barra, text='Tração disponível e requerida',command=self.calcular_tracao)
+        self.button_02.pack(side=ctk.LEFT, padx=5, pady=5)
+
+        self.botao_voltar = ctk.CTkButton(self.frame_barra, text='Retornar', command=self.mainpage)
+        self.botao_voltar.pack(side=ctk.LEFT, padx=5, pady=5)
+
+
+    def calcular_tracao(self):
+        self.limpar_tela()
+        self.frame_barra = ctk.CTkFrame(self)
+        self.frame_barra.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
+
+        self.frame_01 = ctk.CTkFrame(self)
+        self.frame_01.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.82)
+
+        self.botao_voltar = ctk.CTkButton(self.frame_barra, text='Retornar', command=self.analise_desempenho)
+        self.botao_voltar.pack(padx=10, pady=10)
+
+        self.texto_01= ctk.CTkLabel(self.frame_01, text='Calcular as Trações diponivel e requerida')
+        self.texto_01.pack(padx=10, pady=10)
+
+        self.peso_aeronave = ctk.CTkEntry(self.frame_01, placeholder_text='Peso da aeronave(N)')
+        self.peso_aeronave.pack(padx=5, pady=5)
+
+        self.altitude_voo = ctk.CTkEntry(self.frame_01, placeholder_text='Altitude de voo(m)')
+        self.altitude_voo.pack(padx=5, pady=5)
+
+        self.asa_area_aeronave = ctk.CTkEntry(self.frame_01, placeholder_text='Área da asa(m^2)')
+        self.asa_area_aeronave.pack(padx=5, pady=5)
+
+        self.asa_alongamento_aeronave = ctk.CTkEntry(self.frame_01, placeholder_text='Alongamento da asa')
+        self.asa_alongamento_aeronave.pack(padx=5, pady=5) 
+
+        self.coef_arrasto_parasita = ctk.CTkEntry(self.frame_01, placeholder_text='Coeficiente de arrasto parasita')
+        self.coef_arrasto_parasita.pack(padx=5, pady=5) 
+
+        self.coef_arrasto_induzido = ctk.CTkEntry(self.frame_01, placeholder_text='Coeficiente de arrasto induzido ')
+        self.coef_arrasto_induzido.pack(padx=5, pady=5) 
+
+        self.texto_resultado = ctk.StringVar()
+        self.texto_02 = ctk.CTkLabel(self.frame_01, textvariable=self.texto_resultado)
+        self.texto_02.pack(padx=10, pady=10)
+
+    def calculadora_atmosfera(self):
+        self.limpar_tela()
         self.texto_01= ctk.CTkLabel(self, text='Insira a Altitude (metros)')
         self.texto_01.pack(padx=10, pady=10)
 
@@ -118,7 +171,7 @@ class App(ctk.CTk, Banco_de_dados, Backend):
         self.botao_calcular = ctk.CTkButton(self, text='Calcular', command=self.calcular_atmosfera)
         self.botao_calcular.pack(padx=10, pady=10)
 
-        self.botao_voltar = ctk.CTkButton(self, text='Retornar', command=self.mainpage)
+        self.botao_voltar = ctk.CTkButton(self, text='Retornar', command=self.analise_desempenho)
         self.botao_voltar.pack(padx=10, pady=10)
 
         self.texto_resultado = ctk.StringVar()
