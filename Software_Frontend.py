@@ -3,14 +3,15 @@ import tkinter as tk
 from tkinter import ttk
 from Software_Banco_de_dados import Banco_de_dados
 from Software_Backend import Backend
+from Software_Update import Update, verificar_atualizacao
 
-class App(ctk.CTk, Banco_de_dados, Backend):
+class App(ctk.CTk, Banco_de_dados, Backend, Update):
     def __init__(self):
         super().__init__()
         self.configurar_tela()
         self.usuario_atual = None
         self.tela_de_login()
-
+        
     def configurar_tela(self):
         ctk.set_appearance_mode('dark')
         ctk.set_default_color_theme('dark-blue')
@@ -20,6 +21,12 @@ class App(ctk.CTk, Banco_de_dados, Backend):
 
     def tela_de_login(self):
         self.limpar_tela()
+        self.frame_barra = ctk.CTkFrame(self)
+        self.frame_barra.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
+
+        verificar_button = ctk.CTkButton(self.frame_barra, text="Verificar Atualizações", command=verificar_atualizacao)
+        verificar_button.pack(side=ctk.LEFT, padx=5, pady=5)
+
         self.frame_login = ctk.CTkFrame(self, corner_radius=10, border_width=1)
         self.frame_login.pack(expand=True)
 
@@ -130,10 +137,13 @@ class App(ctk.CTk, Banco_de_dados, Backend):
         self.frame_barra.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
 
         self.frame_01 = ctk.CTkFrame(self)
-        self.frame_01.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.82)
+        self.frame_01.place(relx=0.02, rely=0.15, relwidth=0.46, relheight=0.82)
+
+        self.frame_grafico = ctk.CTkFrame(self)
+        self.frame_grafico.place(relx=0.5, rely=0.15, relwidth=0.48, relheight=0.82)
 
         self.botao_voltar = ctk.CTkButton(self.frame_barra, text='Retornar', command=self.analise_desempenho)
-        self.botao_voltar.pack(padx=10, pady=10)
+        self.botao_voltar.pack(side=ctk.LEFT, padx=5, pady=5)
 
         self.texto_01= ctk.CTkLabel(self.frame_01, text='Calcular as Trações diponivel e requerida')
         self.texto_01.pack(padx=10, pady=10)
@@ -156,8 +166,11 @@ class App(ctk.CTk, Banco_de_dados, Backend):
         self.coef_arrasto_induzido = ctk.CTkEntry(self.frame_01, placeholder_text='Coeficiente de arrasto induzido ')
         self.coef_arrasto_induzido.pack(padx=5, pady=5) 
 
-        self.texto_resultado = ctk.StringVar()
-        self.texto_02 = ctk.CTkLabel(self.frame_01, textvariable=self.texto_resultado)
+        self.botao_calcular_01 = ctk.CTkButton(self.frame_01, text='Calcular', command= self.curvas_tracao_disponivel_requerida)
+        self.botao_calcular_01.pack(padx=10, pady=10)
+
+        self.texto_resultado_curvas = ctk.StringVar()
+        self.texto_02 = ctk.CTkLabel(self.frame_01, textvariable=self.texto_resultado_curvas)
         self.texto_02.pack(padx=10, pady=10)
 
     def calculadora_atmosfera(self):

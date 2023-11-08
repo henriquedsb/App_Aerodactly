@@ -2,11 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.optimize import curve_fit, fsolve
+import pandas as pd
 import os
 import sys
 
-class Backend():
 
+
+class Backend():
     def calcular_atmosfera(self):
         try:
             altitude = float(self.entrada_altitude.get())
@@ -158,3 +161,97 @@ class Backend():
 
         return os.path.join(caminho_base, caminho_relativo)
     
+    # Método para calcular e plotar as curvas de tração disponível e requerida
+    def curvas_tracao_disponivel_requerida(self):
+        # Definição dos parâmetros iniciais
+        W = float(self.peso_aeronave.get()) # Peso da aeronave (N)
+        ro = 1.225  # Densidade do ar para uma altitude (kg/m^3)
+        v = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]  # Velocidades da aeronave (m/s)
+        S = float(self.asa_area_aeronave.get()) # Área da asa (m^2)
+        AR = float(self.asa_alongamento_aeronave .get())  # Alongamento da asa
+        Cd0 = float(self.coef_arrasto_parasita.get()) # Coeficiente de arrasto parasita
+        e0 = float(self.coef_arrasto_induzido.get())  # Coeficiente de arrasto induzido - varia entre 0.95 e 1 (asa ideal)
+
+        # Listas para armazenar os resultados
+        lista_Tr = []
+        lista_D0 = []
+        lista_Di = []
+        lista_Td = [35.525, 33.910, 32.013, 29.845, 27.414, 24.727, 21.790, 18.608, 15.185, 11.526, 7.635, 3.515]  # Tração disponível (N)
+        
+        # Loop para calcular os coeficientes e forças para cada velocidade
+        for velocidade in v:
+            Cl = (2 * W) / (ro * (velocidade ** 2) * S)  # Coeficiente de sustentação requerido
+            Cd = Cd0 + (Cl**2) / (np.pi * e0 * AR)  # Coeficiente de arrasto total (Cd = Cd0 + (Cl^2) / (pi * e0 * AR))
+            Tr = W / (Cl / Cd)  # Tração requerida
+            D0 = (1 / 2) * ro * (velocidade ** 2) * S * Cd0  # Força de arrasto parasita
+            Di = (1 / 2) * ro * (velocidade ** 2) * S * (Cd0 * (Cl ** 2))  # Força de arrasto induzida
+            
+            # Adiciona os resultados às listas
+            lista_Tr.append(Tr)
+            lista_D0.append(D0)
+            lista_Di.append(Di)
+
+        # Cria um DataFrame para armazenar os dados
+        dados = {
+            'v(m/s)': v,
+            'Td(N) APC 13"x4"': lista_Td,
+            'D0(N)': lista_D0,
+            'Di(N)': lista_Di,
+            'Tr(N)': lista_Tr
+        }
+        df = pd.DataFrame(dados)
+        #print(df)  # Imprime o DataFrame com os dados
+
+        # Ajusta curvas aos dados usando a função curve_fit do SciPy
+        self.params1, params_covariance1 = curve_fit(self.func1, v, lista_Td)
+        #print("Parâmetros da curva 1:", self.params1)
+
+        self.params2, params_covariance2 = curve_fit(self.func2, v, lista_Tr)
+        #print("Parâmetros da curva 2:", self.params2)
+
+        # Calcula os pontos de interseção das curvas ajustadas
+        intersecao_pontos = []
+        for x_guess in np.linspace(min(v + v), max(v + v), num=100):
+            try:
+                x_intersecao, y_intersecao = fsolve(self.equacoes, [x_guess, self.func1(x_guess, *self.params1)])
+                intersecao_pontos.append((x_intersecao, y_intersecao))
+            except:
+                pass
+
+        # Determina as velocidades mínima e máxima de interseção
+        v_min = min(ponto[0] for ponto in intersecao_pontos)
+        v_max = max(ponto[0] for ponto in intersecao_pontos)
+        resultado_tracao = (f'Velocidade mínima: {v_min:.3f} m/s\n'
+                            f'Velocidade máxima: {v_max:.3f} m/s\n')
+
+        # Plota os gráficos
+        figura = plt.figure(figsize=(8, 6))
+        plt.plot(v, lista_Td, label='Tração Disponível')
+        plt.plot(v, lista_Tr, label='Tração Requisitada')
+        plt.plot(v, lista_D0, label='Força de Arrasto Parasita')
+        plt.plot(v, lista_Di, label='Força de Arrasto Induzida')
+        plt.title('Tração Disponível e Requisitada')
+        plt.xlabel('Velocidade (m/s)')
+        plt.ylabel('Tração (N)')
+        plt.legend()
+
+        canvas = FigureCanvasTkAgg(figura, master=self.frame_grafico)
+        canvas.get_tk_widget().pack()
+        canvas.draw()
+
+        self.texto_resultado_curvas.set(resultado_tracao)
+
+    # Função para ajuste de curva (exponencial)
+    def func1(self, x, a, b, c):
+        return a * np.exp(b * x) + c
+
+    # Função para ajuste de curva (polinomial de segundo grau)
+    def func2(self, x, d, e, f):
+        return d * x**2 + e * x + f
+
+    # Equações para encontrar os pontos de interseção
+    def equacoes(self, vars):
+        x, y = vars
+        eq1 = self.func1(x, *self.params1) - y
+        eq2 = self.func2(x, *self.params2) - y
+        return [eq1, eq2]
